@@ -12,7 +12,7 @@ def test_load_settings_requires_token():
 
 def test_load_settings_parses_defaults():
     settings = load_settings({"BOT_TOKEN": "123:abc"})
-    assert settings.database_path == "data/bot.db"
+    assert settings.database_path == "/data/bot.db"
     assert settings.free_credits == 10
     assert settings.ai_api_key == ""
 
