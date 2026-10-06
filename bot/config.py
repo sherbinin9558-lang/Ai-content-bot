@@ -44,7 +44,7 @@ def load_settings(env: Mapping[str, str] | None = None) -> Settings:
         raise ConfigError("FREE_CREDITS должна быть целым числом.") from exc
     if free_credits < 0:
         raise ConfigError("FREE_CREDITS не может быть отрицательной.")
-    path = env.get("DATABASE_PATH", "").strip() or "data/bot.db"
+    path = env.get("DATABASE_PATH", "").strip() or "/data/bot.db"
     ai_api_key = env.get("AI_API_KEY", "").strip()
     ai_api_base_url = (env.get("AI_API_BASE_URL", "").strip() or "https://api.openai.com/v1").rstrip("/")
     ai_model = env.get("AI_MODEL", "").strip() or "gpt-4o-mini"
