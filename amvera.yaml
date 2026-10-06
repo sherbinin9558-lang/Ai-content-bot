@@ -8,5 +8,5 @@ build:
   requirementsPath: requirements.txt
 
 run:
-  command: python diagnose_amvera.py
+  command: python -m bot.main
   persistenceMount: /data
