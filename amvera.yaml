@@ -8,5 +8,5 @@ build:
   requirementsPath: requirements.txt
 
 run:
-  command: python -m bot.main
+  command: bot/main.py
   persistenceMount: /data
