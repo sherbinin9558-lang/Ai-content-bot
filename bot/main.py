@@ -9,7 +9,7 @@ from aiogram.types import BotCommand
 from aiogram.utils.token import TokenValidationError
 from bot.config import ConfigError,RedactingFormatter,Settings,load_settings
 from bot.db.database import Database
-from bot.handlers import account,features,start,legal,payments
+from bot.handlers import account,features,start,legal,payments,business
 from bot.services.ai_router import AIService
 from bot.services.credits import CreditsService,UserNotFound
 from bot.services.payments import YooKassaClient,PaymentError
@@ -21,7 +21,7 @@ def setup_logging(secret=""):
     handler=logging.StreamHandler(); handler.setFormatter(RedactingFormatter(secret,LOG_FORMAT)); logging.basicConfig(level=logging.INFO,handlers=[handler],force=True)
 
 def build_dispatcher(db,credits,settings:Settings|None=None):
-    dp=Dispatcher(storage=MemoryStorage()); dp.include_routers(start.router,account.router,features.router,payments.router,legal.router)
+    dp=Dispatcher(storage=MemoryStorage()); dp.include_routers(start.router,account.router,features.router,payments.router,legal.router,business.router)
     ai_service=AIService(credits,db)
     if settings and settings.ai_api_key:
         ai_service.register(OpenAICompatibleTextProvider(settings.ai_api_key,settings.ai_api_base_url,settings.ai_model))
@@ -57,7 +57,7 @@ async def run(settings:Settings):
     bot=Bot(settings.bot_token); db=None; runner=None
     try:
         db=await Database.connect(settings.database_path); await db.sync_provider_catalog(); credits=CreditsService(db,settings.free_credits); dp=build_dispatcher(db,credits,settings)
-        try: await bot.set_my_commands([BotCommand(command="start",description="Начать"),BotCommand(command="menu",description="Главное меню"),BotCommand(command="legal",description="Документы")])
+        try: await bot.set_my_commands([BotCommand(command="start",description="Начать"),BotCommand(command="menu",description="Главное меню"),BotCommand(command="plans",description="Тарифы"),BotCommand(command="templates",description="Шаблоны"),BotCommand(command="legal",description="Документы")])
         except TelegramAPIError: log.warning("Не удалось установить команды бота")
         app=web.Application(); app["db"]=db; app["settings"]=settings
         app.router.add_get("/health",health); app.router.add_post(settings.webhook_path,yookassa_webhook)
