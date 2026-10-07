@@ -55,6 +55,43 @@ CREATE TABLE IF NOT EXISTS ai_usage (
 );
 CREATE INDEX IF NOT EXISTS idx_ai_usage_created ON ai_usage (created_at DESC);
 
+CREATE TABLE IF NOT EXISTS providers (
+ id INTEGER PRIMARY KEY AUTOINCREMENT,
+ name TEXT NOT NULL UNIQUE,
+ currency TEXT NOT NULL DEFAULT 'USD',
+ api_base TEXT,
+ active INTEGER NOT NULL DEFAULT 1,
+ created_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS models (
+ id INTEGER PRIMARY KEY AUTOINCREMENT,
+ provider_id INTEGER NOT NULL REFERENCES providers(id),
+ name TEXT NOT NULL,
+ title TEXT NOT NULL,
+ operation TEXT NOT NULL,
+ pricing_unit TEXT NOT NULL,
+ provider_cost_usd TEXT NOT NULL,
+ credits INTEGER NOT NULL,
+ active INTEGER NOT NULL DEFAULT 0,
+ UNIQUE(provider_id,name)
+);
+
+CREATE TABLE IF NOT EXISTS ai_operations (
+ id TEXT PRIMARY KEY,
+ telegram_id INTEGER NOT NULL REFERENCES users(telegram_id),
+ model_id INTEGER,
+ operation TEXT NOT NULL,
+ input_units TEXT,
+ output_units TEXT,
+ provider_cost_usd TEXT NOT NULL,
+ credits_charged INTEGER NOT NULL DEFAULT 0,
+ status TEXT NOT NULL,
+ created_at TEXT NOT NULL,
+ FOREIGN KEY(model_id) REFERENCES models(id)
+);
+CREATE INDEX IF NOT EXISTS idx_ai_operations_user ON ai_operations (telegram_id, created_at DESC);
+
 CREATE TABLE IF NOT EXISTS legal_consents (
  id INTEGER PRIMARY KEY AUTOINCREMENT, telegram_id INTEGER NOT NULL REFERENCES users(telegram_id),
  document TEXT NOT NULL, version TEXT NOT NULL, accepted_at TEXT NOT NULL,
