@@ -21,7 +21,7 @@ async def show_templates(message: Message):
 
 
 from aiogram.filters import Command
-from bot.services.content_library import trends_text, prompts_text, academy_text
+from bot.services.content_library import trends_text, prompts_text
 
 @router.message(Command("trends"))
 async def show_trends(message: Message):
@@ -31,6 +31,3 @@ async def show_trends(message: Message):
 async def show_prompts(message: Message):
     await message.answer(prompts_text(), reply_markup=main_menu())
 
-@router.message(Command("academy"))
-async def show_academy(message: Message):
-    await message.answer(academy_text(), reply_markup=main_menu())
