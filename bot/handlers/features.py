@@ -5,7 +5,7 @@ import logging
 from aiogram import F,Router
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State,StatesGroup
-from aiogram.types import CallbackQuery,Message
+from aiogram.types import CallbackQuery,Message,BufferedInputFile
 from bot.db.database import Database
 from bot.keyboards.main import BUTTON_TO_FEATURE,FEATURE_BUTTONS,back_to_menu,main_menu,model_picker
 from bot.services.ai_router import AIJob,AIService,Feature,JobStatus,OPERATION_BY_FEATURE
@@ -66,6 +66,14 @@ async def _finish(message,db,ai_service,feature,answers,provider,model):
     try: result=await ai_service.submit(AIJob(feature,prompt,message.from_user.id,provider,model,params))
     except InsufficientCredits as exc: await message.answer(f"Недостаточно кредитов: {exc.balance}, нужно {exc.needed}.",reply_markup=main_menu()); return
     number=await db.add_generation(message.from_user.id,feature.value,prompt if feature!=Feature.PHOTO else "Задача: улучшить фото (фото приложено)",result.status.value)
-    if result.status is JobStatus.COMPLETED and result.text: await message.answer(f"{result.text}\n\nСписано: {result.cost} кредитов.",reply_markup=main_menu())
+    if result.status is JobStatus.COMPLETED:
+        if result.media and (result.mime_type or "").startswith("image/"):
+            await message.answer_photo(BufferedInputFile(result.media,filename=result.filename or "result.png"),caption=f"Готово. Списано: {result.cost} кредитов.",reply_markup=main_menu())
+        elif result.media and (result.mime_type or "").startswith("video/"):
+            await message.answer_video(BufferedInputFile(result.media,filename=result.filename or "result.mp4"),caption=f"Готово. Списано: {result.cost} кредитов.",reply_markup=main_menu())
+        elif result.text:
+            await message.answer(f"{result.text}\n\nСписано: {result.cost} кредитов.",reply_markup=main_menu())
+        else:
+            await message.answer("Генерация завершена, но провайдер не вернул результат.",reply_markup=main_menu())
     elif result.status is JobStatus.PENDING_PROVIDER: await message.answer(f"⏳ {number}: модель выбрана, но её API ещё не подключён. Кредиты не списаны.",reply_markup=main_menu())
     else: await message.answer(f"❌ Задача #{number} не выполнена. Кредиты возвращены.",reply_markup=main_menu())
