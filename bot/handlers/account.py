@@ -71,9 +71,6 @@ async def referral(message:Message,db:Database):
     code=await db.referral_code(message.from_user.id); count,rewarded=await db.referral_stats(message.from_user.id)
     await message.answer(f"🤝 Партнёрская программа\n\nВаш код: {code}\nПриглашено: {count}\nАктивировано: {rewarded}\n\nДля MVP код можно передать другу; автоматическая выдача бонусов подключается отдельным этапом после фиксации антифрода и условий программы.",reply_markup=main_menu())
 
-@router.message(Command("start"))
-async def referral_start(message:Message,db:Database):
-    pass
 
 @router.message(F.text==BTN_PROFILE)
 @router.message(Command("profile"))
