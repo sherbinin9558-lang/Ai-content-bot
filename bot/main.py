@@ -56,7 +56,7 @@ async def health(request:web.Request): return web.json_response({"ok":True,"serv
 async def run(settings:Settings):
     bot=Bot(settings.bot_token); db=None; runner=None
     try:
-        db=await Database.connect(settings.database_path); credits=CreditsService(db,settings.free_credits); dp=build_dispatcher(db,credits,settings)
+        db=await Database.connect(settings.database_path); await db.sync_provider_catalog(); credits=CreditsService(db,settings.free_credits); dp=build_dispatcher(db,credits,settings)
         try: await bot.set_my_commands([BotCommand(command="start",description="Начать"),BotCommand(command="menu",description="Главное меню"),BotCommand(command="legal",description="Документы")])
         except TelegramAPIError: log.warning("Не удалось установить команды бота")
         app=web.Application(); app["db"]=db; app["settings"]=settings
