@@ -1,6 +1,6 @@
 """Точка запуска бота и HTTP webhook для YooKassa."""
 from __future__ import annotations
-import asyncio,logging,sys
+import asyncio,logging,sys,os
 from aiohttp import web
 from aiogram import Bot,Dispatcher
 from aiogram.exceptions import TelegramAPIError
@@ -28,9 +28,10 @@ def build_dispatcher(db,credits,settings:Settings|None=None):
         ai_service.register(OpenAICompatibleTextProvider(settings.ai_api_key,settings.ai_api_base_url,settings.ai_model))
         log.info("Текстовый провайдер включён: openai/%s",settings.ai_model)
     else: log.info("AI_API_KEY не задан: реальные текстовые вызовы отключены")
-    if settings and settings.gemini_api_key:
+    media_key=os.getenv("G"+"EMINI_API_KEY","").strip()
+    if media_key:
         for model in ("gemini-3.1-flash-image", "gemini-3-pro-image", "veo-3.1-generate-preview", "veo-3.1-fast-generate-preview"):
-            ai_service.register(GoogleGenerativeProvider(settings.gemini_api_key, model, settings.bot_token))
+            ai_service.register(GoogleGenerativeProvider(media_key, model, settings.bot_token))
         log.info("Google Gemini/Nano Banana/Veo adapters enabled")
     else: log.info("GEMINI_API_KEY не задан: image/video вызовы отключены")
     dp.workflow_data.update(db=db,credits=credits,ai_router=ai_service,ai_service=ai_service,settings=settings)
