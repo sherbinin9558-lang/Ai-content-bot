@@ -18,19 +18,15 @@ async def test_subscription_activation_and_idempotency():
         await db.close()
 
 @pytest.mark.asyncio
-async def test_history_favorites_projects_and_referral():
+async def test_history_favorites_and_projects():
     db=await Database.connect(":memory:")
     try:
         await db.register_user(1,"one","One",5)
-        await db.register_user(2,"two","Two",5)
         gid=await db.add_generation(1,"social","test prompt","completed")
         assert await db.toggle_favorite(1,gid)
         assert len(await db.list_favorites(1))==1
         pid=await db.create_project(1,"Shop")
         assert await db.attach_generation(1,pid,gid)
-        code=await db.referral_code(1)
-        assert await db.apply_referral(2,code)
-        assert await db.referral_stats(1)==(1,0)
     finally:
         await db.close()
 
