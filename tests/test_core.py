@@ -36,8 +36,8 @@ async def test_payment_confirmation_is_idempotent(tmp_path):
     finally: await db.close()
 def test_provider_catalog_exposes_named_models():
     assert any(m.title=="Nano Banana 2" and not m.enabled for m in list_catalog("image"))
-    assert any(m.title=="Nano Banana Pro" and not m.enabled for m in list_catalog("image"))
-    assert list_models("image")==[]
+    assert any(m.title=="Nano Banana Pro" and m.enabled for m in list_models("image"))
+    assert any(m.title=="Nano Banana 2" and m.enabled for m in list_models("image"))
 def test_economics_is_decimal_and_tracks_margin():
     result=calculate_cost(Decimal("0.067"),Decimal("199"),EconomicsConfig(usd_rub=Decimal("90")))
     assert result.provider_rub==Decimal("6.03")
