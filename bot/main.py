@@ -57,7 +57,7 @@ async def run(settings:Settings):
     bot=Bot(settings.bot_token); db=None; runner=None
     try:
         db=await Database.connect(settings.database_path); await db.sync_provider_catalog(); credits=CreditsService(db,settings.free_credits); dp=build_dispatcher(db,credits,settings)
-        try: await bot.set_my_commands([BotCommand(command="start",description="Начать"),BotCommand(command="menu",description="Главное меню"),BotCommand(command="plans",description="Тарифы"),BotCommand(command="templates",description="Шаблоны"),BotCommand(command="legal",description="Документы")])
+        try: await bot.set_my_commands([BotCommand(command="start",description="Начать"),BotCommand(command="menu",description="Главное меню"),BotCommand(command="plans",description="Тарифы"),BotCommand(command="templates",description="Шаблоны"),BotCommand(command="trends",description="Тренды"),BotCommand(command="prompts",description="Промпты"),BotCommand(command="history",description="История"),BotCommand(command="profile",description="Профиль"),BotCommand(command="ref",description="Партнёрство"),BotCommand(command="legal",description="Документы")])
         except TelegramAPIError: log.warning("Не удалось установить команды бота")
         app=web.Application(); app["db"]=db; app["settings"]=settings
         app.router.add_get("/health",health); app.router.add_post(settings.webhook_path,yookassa_webhook)
