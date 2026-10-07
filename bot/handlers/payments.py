@@ -26,6 +26,9 @@ async def buy_menu(message: Message):
 
 @router.message(F.text.startswith("/buy"))
 async def buy(message: Message, db: Database, settings):
+    if not await db.has_legal_consent(message.from_user.id, "offer", "1.0"):
+        await message.answer("Перед покупкой необходимо принять документы: /offer, /privacy, /rules, /refund, затем /accept.", reply_markup=main_menu())
+        return
     try:
         index = int((message.text or "").split(maxsplit=1)[1]) - 1
         package_id, title, price, credits = PACKAGES[index]
