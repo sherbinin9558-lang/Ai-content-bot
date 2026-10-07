@@ -19,7 +19,7 @@ class Model:
     enabled: bool = True
 
 MODELS: tuple[Model, ...] = (
-    Model("openai", "gpt-4o-mini", "GPT-4o mini", "text", "1K output tokens", Decimal("0.0006"), 1, False),
+    Model("openai", "gpt-4o-mini", "GPT-4o mini", "text", "1K output tokens", Decimal("0.0006"), 1, True),
     Model("google", "gemini-3.8-flash", "Gemini 3.8 Flash", "text", "1K output tokens", Decimal("0.0045"), 2, False),
     Model("anthropic", "claude-opus-5.5", "Claude Opus 5.5", "text", "1K output tokens", Decimal("0.0300"), 5, False),
     Model("google", "nano-banana-2", "Nano Banana 2", "image", "image", Decimal("0.067"), 10, False),
