@@ -32,3 +32,15 @@ def prompts_text() -> str:
 
 def academy_text() -> str:
     return "🎓 AI Академия\n\n" + "\n".join(f"• {k}: {d}" for k,_,d in ACADEMY)
+
+
+def pipeline_text() -> str:
+    return ("🚀 Content Pipeline\n\n"
+            "1. Товар / исходное фото\n"
+            "2. Фото товара\n"
+            "3. Карточка товара\n"
+            "4. Рекламный креатив\n"
+            "5. Видео / Reels\n"
+            "6. Пост и CTA\n\n"
+            "На каждом шаге пользователь сам выбирает провайдера и модель. "
+            "Автоматическая замена модели не выполняется.")
