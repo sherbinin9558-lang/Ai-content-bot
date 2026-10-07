@@ -253,10 +253,9 @@ class Database:
         await self._conn.execute("INSERT OR IGNORE INTO project_generations VALUES (?,?)",(project_id,generation_id)); await self._conn.commit(); return True
 
     async def referral_code(self,telegram_id:int)->str:
-        import secrets
         async with self._conn.execute("SELECT code FROM referral_codes WHERE telegram_id=?",(telegram_id,)) as cur: row=await cur.fetchone()
         if row: return row[0]
-        code=secrets.token_urlsafe(6).replace("-","_")
+        code=f"ref_{telegram_id}"
         await self._conn.execute("INSERT INTO referral_codes VALUES (?,?,?)",(telegram_id,code,now_iso())); await self._conn.commit(); return code
     async def apply_referral(self,referred_id:int,code:str)->bool:
         validate_telegram_id(referred_id)
