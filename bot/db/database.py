@@ -104,6 +104,11 @@ class Database:
         validate_telegram_id(telegram_id)
         await self._conn.execute("BEGIN IMMEDIATE")
         try:
+            if kind and reference_id is not None:
+                async with self._conn.execute("SELECT 1 FROM credit_transactions WHERE kind=? AND reference_id=? LIMIT 1",(kind,reference_id)) as existing:
+                    if await existing.fetchone():
+                        await self._conn.rollback()
+                        return True
             cur=await self._conn.execute("UPDATE users SET credits=credits+?,updated_at=? WHERE telegram_id=? AND credits+? >= 0",(delta,now_iso(),telegram_id,delta))
             if cur.rowcount!=1: await self._conn.rollback(); return False
             user=await self.get_user(telegram_id); assert user is not None
