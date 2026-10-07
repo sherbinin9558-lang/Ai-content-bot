@@ -193,8 +193,29 @@ class Database:
         except Exception:
             await self._conn.rollback(); raise
 
+    async def sync_provider_catalog(self)->None:
+        from bot.services.provider_catalog import MODELS
+        ts=now_iso()
+        for item in MODELS:
+            await self._conn.execute("INSERT INTO providers (name,currency,active,created_at) VALUES (?,'USD',1,?) ON CONFLICT(name) DO UPDATE SET active=1",(item.provider,ts))
+            async with self._conn.execute("SELECT id FROM providers WHERE name=?", (item.provider,)) as cur:
+                row=await cur.fetchone()
+            assert row is not None
+            await self._conn.execute("INSERT INTO models (provider_id,name,title,operation,pricing_unit,provider_cost_usd,credits,active) VALUES (?,?,?,?,?,?,?,?) ON CONFLICT(provider_id,name) DO UPDATE SET title=excluded.title,operation=excluded.operation,pricing_unit=excluded.pricing_unit,provider_cost_usd=excluded.provider_cost_usd,credits=excluded.credits,active=excluded.active",(row[0],item.model,item.title,item.operation,item.unit,str(item.provider_cost_usd),item.credits,int(item.enabled)))
+        await self._conn.commit()
+
     async def add_ai_usage(self,telegram_id:int,provider:str,model:str,operation:str,provider_cost_usd,credits_charged:int,status:str)->None:
-        await self._conn.execute("INSERT INTO ai_usage (telegram_id,provider,model,operation,provider_cost_usd,credits_charged,status,created_at) VALUES (?,?,?,?,?,?,?,?)",(telegram_id,provider,model,operation,str(provider_cost_usd),credits_charged,status,now_iso())); await self._conn.commit()
+        created=now_iso()
+        await self._conn.execute("INSERT INTO ai_usage (telegram_id,provider,model,operation,provider_cost_usd,credits_charged,status,created_at) VALUES (?,?,?,?,?,?,?,?)",(telegram_id,provider,model,operation,str(provider_cost_usd),credits_charged,status,created))
+        async with self._conn.execute("SELECT m.id FROM models m JOIN providers p ON p.id=m.provider_id WHERE p.name=? AND m.name=?",(provider,model)) as cur:
+            row=await cur.fetchone()
+        await self._conn.execute("INSERT INTO ai_operations (id,telegram_id,model_id,operation,provider_cost_usd,credits_charged,status,created_at) VALUES (?,?,?,?,?,?,?,?)",(f"usage:{telegram_id}:{provider}:{model}:{created}",telegram_id,row[0] if row else None,operation,str(provider_cost_usd),credits_charged,status,created))
+        await self._conn.commit()
+
+    async def has_legal_consent(self,telegram_id:int,document:str,version:str)->bool:
+        validate_telegram_id(telegram_id)
+        async with self._conn.execute("SELECT 1 FROM legal_consents WHERE telegram_id=? AND document=? AND version=? LIMIT 1",(telegram_id,document,version)) as cur:
+            return await cur.fetchone() is not None
 
     async def accept_legal(self,telegram_id:int,document:str,version:str)->None:
         await self._conn.execute("INSERT OR IGNORE INTO legal_consents (telegram_id,document,version,accepted_at) VALUES (?,?,?,?)",(telegram_id,document,version,now_iso())); await self._conn.commit()
