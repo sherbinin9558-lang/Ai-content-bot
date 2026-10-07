@@ -19,10 +19,7 @@ async def show_plans(message: Message):
 async def show_templates(message: Message):
     await message.answer(templates_text(), reply_markup=main_menu())
 
-
-from aiogram.filters import Command
 from bot.services.content_library import trends_text, prompts_text
-
 @router.message(Command("trends"))
 async def show_trends(message: Message):
     await message.answer(trends_text(), reply_markup=main_menu())
