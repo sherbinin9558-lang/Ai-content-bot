@@ -87,3 +87,11 @@ def templates_text() -> str:
         "Шаблон меняет сценарий задачи, а не скрывает выбор AI.",
     ]
     return "\n".join(lines)
+
+
+def plan_by_key(key: str) -> Plan | None:
+    return next((plan for plan in PLANS if plan.key == key), None)
+
+
+def paid_plans() -> tuple[Plan, ...]:
+    return tuple(plan for plan in PLANS if plan.monthly_rub is not None)
