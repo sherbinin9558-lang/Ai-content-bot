@@ -1,4 +1,4 @@
-"""Каталог провайдеров и моделей. Модель выбирает пользователь, автоматического роутера нет."""
+"""Реестр провайдеров. Пользователь выбирает модель; автоматического AI Router нет."""
 from __future__ import annotations
 from dataclasses import dataclass
 from decimal import Decimal
@@ -13,8 +13,7 @@ class ProviderRegistry:
     def get(self,provider,model,operation): return self._items.get((provider,model,operation))
     def list_active(self,operation=None): return sorted([x for x in self._items.values() if x.active and (operation is None or x.operation==operation)],key=lambda x:(x.operation,x.provider,x.model))
 def default_registry():
+    from bot.services.provider_catalog import MODELS
     r=ProviderRegistry()
-    r.register(ModelPricing("openai","gpt-4o-mini","text","1K output tokens",Decimal("0.0006"),1))
-    r.register(ModelPricing("google","nano-banana-2","image","image",Decimal("0.067"),10))
-    r.register(ModelPricing("google","nano-banana-pro","image","image",Decimal("0.15"),25))
+    for m in MODELS:r.register(ModelPricing(m.provider,m.model,m.operation,m.unit,m.provider_cost_usd,m.credits,m.enabled))
     return r
