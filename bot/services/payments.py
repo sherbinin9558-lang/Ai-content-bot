@@ -9,8 +9,10 @@ class YooKassaClient:
     def __init__(self,shop_id:str,secret_key:str,return_url:str,timeout:int=30):
         self.shop_id=shop_id; self.secret_key=secret_key; self.return_url=return_url; self.timeout=aiohttp.ClientTimeout(total=timeout)
     def _auth(self)->str: return "Basic "+base64.b64encode(f"{self.shop_id}:{self.secret_key}".encode()).decode()
-    async def create_payment(self,payment_id:str,amount_rub:Decimal,description:str,metadata:dict):
+    async def create_payment(self,payment_id:str,amount_rub:Decimal,description:str,metadata:dict,payment_method_type:str|None=None):
         payload={"amount":{"value":f"{amount_rub:.2f}","currency":"RUB"},"capture":True,"confirmation":{"type":"redirect","return_url":self.return_url},"description":description,"metadata":metadata}
+        if payment_method_type:
+            payload["payment_method_data"]={"type":payment_method_type}
         headers={"Authorization":self._auth(),"Content-Type":"application/json","Idempotence-Key":payment_id}
         async with aiohttp.ClientSession(timeout=self.timeout) as s:
             async with s.post(f"{self.BASE_URL}/payments",json=payload,headers=headers) as r:
