@@ -12,6 +12,13 @@ from bot.services.provider_catalog import Model, get_model
 
 log=logging.getLogger(__name__)
 
+@dataclass(frozen=True)
+class ProviderResult:
+    text: str | None = None
+    media: bytes | None = None
+    mime_type: str | None = None
+    filename: str | None = None
+
 class Feature(StrEnum):
     PHOTO="photo"; PRODUCT_CARD="product_card"; AD_CREATIVE="ad_creative"; VIDEO="video"; SOCIAL="social"; ASSISTANT="assistant"
 class JobStatus(StrEnum):
@@ -24,13 +31,13 @@ class AIJob:
 
 @dataclass(frozen=True)
 class JobResult:
-    status:JobStatus; text:str|None=None; cost:int=0; usage_id:str|None=None
+    status:JobStatus; text:str|None=None; cost:int=0; usage_id:str|None=None; media:bytes|None=None; mime_type:str|None=None; filename:str|None=None
 
 class AIProvider(Protocol):
     provider_name:str
     model_name:str
     def supports(self,operation:str)->bool: ...
-    async def run(self,job:AIJob)->str: ...
+    async def run(self,job:AIJob)->ProviderResult | str: ...
 
 class AIService:
     def __init__(self,credits:CreditsService,db=None)->None:
@@ -52,13 +59,14 @@ class AIService:
         await self._credits.deduct(job.user_id,model.credits,usage_id)
         try:
             result=await provider.run(job)
+            if isinstance(result,str): result=ProviderResult(text=result)
         except Exception:
             log.exception("provider failed provider=%s model=%s",model.provider,model.model)
             await self._credits.add(job.user_id,model.credits,"refund",usage_id)
             if self._db: await self._db.add_ai_usage(job.user_id,model.provider,model.model,operation,model.provider_cost_usd,model.credits,"failed_refunded")
             return JobResult(JobStatus.FAILED,cost=model.credits,usage_id=usage_id)
         if self._db: await self._db.add_ai_usage(job.user_id,model.provider,model.model,operation,model.provider_cost_usd,model.credits,"completed")
-        return JobResult(JobStatus.COMPLETED,text=result,cost=model.credits,usage_id=usage_id)
+        return JobResult(JobStatus.COMPLETED,text=result.text,cost=model.credits,usage_id=usage_id,media=result.media,mime_type=result.mime_type,filename=result.filename)
 
 AIRouter=AIService
 COSTS={f:1 for f in Feature}
