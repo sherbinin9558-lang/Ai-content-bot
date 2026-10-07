@@ -14,6 +14,7 @@ from bot.services.ai_router import AIService
 from bot.services.credits import CreditsService,UserNotFound
 from bot.services.payments import YooKassaClient,PaymentError
 from bot.services.text_provider import OpenAICompatibleTextProvider
+from bot.services.google_provider import GoogleGenerativeProvider
 
 log=logging.getLogger("bot"); LOG_FORMAT="%(asctime)s %(levelname)s %(name)s: %(message)s"
 
@@ -27,6 +28,11 @@ def build_dispatcher(db,credits,settings:Settings|None=None):
         ai_service.register(OpenAICompatibleTextProvider(settings.ai_api_key,settings.ai_api_base_url,settings.ai_model))
         log.info("Текстовый провайдер включён: openai/%s",settings.ai_model)
     else: log.info("AI_API_KEY не задан: реальные текстовые вызовы отключены")
+    if settings and settings.gemini_api_key:
+        for model in ("gemini-3.1-flash-image", "gemini-3-pro-image", "veo-3.1-generate-preview", "veo-3.1-fast-generate-preview"):
+            ai_service.register(GoogleGenerativeProvider(settings.gemini_api_key, model, settings.bot_token))
+        log.info("Google Gemini/Nano Banana/Veo adapters enabled")
+    else: log.info("GEMINI_API_KEY не задан: image/video вызовы отключены")
     dp.workflow_data.update(db=db,credits=credits,ai_router=ai_service,ai_service=ai_service,settings=settings)
     return dp
 
