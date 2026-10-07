@@ -259,11 +259,13 @@ class Database:
         code=secrets.token_urlsafe(6).replace("-","_")
         await self._conn.execute("INSERT INTO referral_codes VALUES (?,?,?)",(telegram_id,code,now_iso())); await self._conn.commit(); return code
     async def apply_referral(self,referred_id:int,code:str)->bool:
+        validate_telegram_id(referred_id)
+        code=code.strip()
         async with self._conn.execute("SELECT telegram_id FROM referral_codes WHERE code=?",(code,)) as cur: row=await cur.fetchone()
         if not row or row[0]==referred_id: return False
-        try:
-            await self._conn.execute("INSERT INTO referrals (referrer_id,referred_id) VALUES (?,?)",(row[0],referred_id)); await self._conn.commit(); return True
-        except aiosqlite.IntegrityError: await self._conn.rollback(); return False
+        cur=await self._conn.execute("INSERT OR IGNORE INTO referrals (referrer_id,referred_id) VALUES (?,?)",(row[0],referred_id))
+        await self._conn.commit()
+        return cur.rowcount==1
     async def referral_stats(self,telegram_id:int)->tuple[int,int]:
         async with self._conn.execute("SELECT COUNT(*),COALESCE(SUM(rewarded),0) FROM referrals WHERE referrer_id=?",(telegram_id,)) as cur: row=await cur.fetchone()
         return int(row[0]),int(row[1])
