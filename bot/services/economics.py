@@ -1,4 +1,4 @@
-"""Расчёт AI-себестоимости и маржи."""
+"""Единая экономика: себестоимость API, комиссии, НПД, резерв и маржа."""
 from __future__ import annotations
 from dataclasses import dataclass
 from decimal import Decimal,ROUND_HALF_UP
