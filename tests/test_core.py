@@ -4,7 +4,7 @@ from bot.config import ConfigError,load_settings
 from bot.db.database import Database
 from bot.services.credits import CreditsService,InsufficientCredits
 from bot.services.economics import calculate_cost,EconomicsConfig
-from bot.services.provider_catalog import get_model,list_models
+from bot.services.provider_catalog import get_model,list_catalog,list_models
 
 def test_load_settings_requires_token():
     with pytest.raises(ConfigError): load_settings({})
@@ -35,8 +35,9 @@ async def test_payment_confirmation_is_idempotent(tmp_path):
         assert await credits.get_balance(2002)==100
     finally: await db.close()
 def test_provider_catalog_exposes_named_models():
-    assert get_model("google","nano-banana-2") is not None
-    assert any(m.title=="Nano Banana Pro" for m in list_models("image"))
+    assert any(m.title=="Nano Banana 2" and not m.enabled for m in list_catalog("image"))
+    assert any(m.title=="Nano Banana Pro" and not m.enabled for m in list_catalog("image"))
+    assert list_models("image")==[]
 def test_economics_is_decimal_and_tracks_margin():
     result=calculate_cost(Decimal("0.067"),Decimal("199"),EconomicsConfig(usd_rub=Decimal("90")))
     assert result.provider_rub==Decimal("6.03")
