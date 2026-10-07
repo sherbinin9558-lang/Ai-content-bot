@@ -2,7 +2,7 @@
 from __future__ import annotations
 from aiogram.types import InlineKeyboardButton,InlineKeyboardMarkup,KeyboardButton,ReplyKeyboardMarkup
 from bot.services.ai_router import Feature
-from bot.services.provider_catalog import list_models
+from bot.services.provider_catalog import list_catalog
 BTN_MENU="🏠 Главное меню"; BTN_BALANCE="💳 Баланс"; BTN_HISTORY="📚 История"; BTN_PROFILE="👤 Профиль"; BTN_BUY="💳 Купить кредиты"; BTN_LEGAL="⚖️ Документы"
 FEATURE_BUTTONS={Feature.PHOTO:"🖼 Улучшить фото",Feature.PRODUCT_CARD:"🛍 Карточка товара",Feature.AD_CREATIVE:"📢 Рекламный креатив",Feature.VIDEO:"🎬 Создать видео",Feature.SOCIAL:"📱 Контент для соцсетей",Feature.ASSISTANT:"✨ AI-помощник"}
 BUTTON_TO_FEATURE={text:feature for feature,text in FEATURE_BUTTONS.items()}
@@ -12,5 +12,14 @@ def main_menu():
     return ReplyKeyboardMarkup(keyboard=rows,resize_keyboard=True)
 def back_to_menu(): return ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text=BTN_MENU)]],resize_keyboard=True)
 def model_picker(operation:str)->InlineKeyboardMarkup:
-    models=list_models(operation)
-    return InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text=f"{m.title} · {m.credits} кр.",callback_data=f"model:{m.provider}:{m.model}")] for m in models]+[[InlineKeyboardButton(text="Отмена",callback_data="model:cancel")]])
+    models=list_catalog(operation)
+    rows=[]
+    current_provider=None
+    for m in models:
+        if m.provider != current_provider:
+            current_provider=m.provider
+            rows.append([InlineKeyboardButton(text=f"— {current_provider.upper()} —",callback_data="model:noop")])
+        status="🟢" if m.enabled else "⚪"
+        rows.append([InlineKeyboardButton(text=f"{status} {m.title} · {m.credits} кр.",callback_data=f"model:{m.provider}:{m.model}")])
+    rows.append([InlineKeyboardButton(text="Отмена",callback_data="model:cancel")])
+    return InlineKeyboardMarkup(inline_keyboard=rows)
