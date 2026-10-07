@@ -38,7 +38,7 @@ async def yookassa_webhook(request:web.Request):
     if not provider_payment_id: return web.json_response({"ok":True})
     payment=await db.get_payment_by_provider_id(provider_payment_id)
     if not payment: return web.json_response({"ok":True})
-    if not await db.record_payment_event(payload.get("event"),"yookassa",payment[0],payload.get("event","unknown"),payload): return web.json_response({"ok":True})
+    if not await db.record_payment_event(f"{provider_payment_id}:{payload.get('event','unknown')}", "yookassa", payment[0], payload.get("event","unknown"), payload): return web.json_response({"ok":True})
     client=YooKassaClient(settings.yookassa_shop_id,settings.yookassa_secret_key,settings.payment_return_url)
     try: verified=await client.get_payment(provider_payment_id)
     except PaymentError:
